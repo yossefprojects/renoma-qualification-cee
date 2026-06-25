@@ -387,7 +387,7 @@ function evalDestrat(t: DataMap): EvalResult {
 function fichePAC(surfaceKey?: string, seuil?: number): OpRule {
   return {
     code: "BAT-TH-163/164",
-    name: "PAC Air/Eau ou Eau/Eau",
+    name: "Pompe à chaleur de type air/eau ou eau/eau",
     description: "Remplacement du chauffage par une pompe à chaleur",
     documents: ["Plans du local technique / chaufferie"],
     evaluate: (t) => evalPAC(t, surfaceKey, seuil),
@@ -397,7 +397,7 @@ function fichePAC(surfaceKey?: string, seuil?: number): OpRule {
 function ficheGTB(surfaceKey: string, seuil: number): OpRule {
   return {
     code: "BAT-TH-116",
-    name: "Système de GTB",
+    name: "Système de gestion technique du bâtiment",
     description: "Mise en place d'une gestion technique du bâtiment (classe A/B)",
     documents: ["Synoptique CVC / schéma de principe", "Inventaire des points de comptage"],
     evaluate: evalGTB(surfaceKey, seuil),
@@ -407,7 +407,7 @@ function ficheGTB(surfaceKey: string, seuil: number): OpRule {
 function ficheGTBrooms(seuil: number): OpRule {
   return {
     code: "BAT-TH-116",
-    name: "Système de GTB",
+    name: "Système de gestion technique du bâtiment",
     description: "Mise en place d'une gestion technique du bâtiment (classe A/B)",
     documents: ["Synoptique CVC / schéma de principe", "Inventaire des points de comptage"],
     evaluate: (t) => {
@@ -421,16 +421,16 @@ function ficheGTBrooms(seuil: number): OpRule {
 }
 
 const FICHE_DESTRAT: OpRule = {
-  code: "BAT-TH-113",
-  name: "Déstratificateur / brasseur d'air",
+  code: "BAT-TH-142",
+  name: "Système de déstratification d'air",
   description: "Installation de déstratificateurs ou brasseurs d'air",
   documents: ["Plan de l'entrepôt avec hauteurs sous plafond"],
   evaluate: evalDestrat,
 };
 
 const FICHE_MEUBLES: OpRule = {
-  code: "BAT-EQ-127",
-  name: "Fermeture de meuble frigorifique",
+  code: "BAT-EQ-124",
+  name: "Fermeture des meubles frigorifiques de vente à température positive",
   description: "Pose de portes/fermetures sur meubles frigorifiques de vente",
   documents: ["Linéaire et inventaire des meubles froids"],
   evaluate: (t) => {
@@ -440,9 +440,9 @@ const FICHE_MEUBLES: OpRule = {
 };
 
 const FICHE_RECUP: OpRule = {
-  code: "IND-UT-117",
-  name: "Récupérateur de chaleur",
-  description: "Récupération de chaleur sur groupe de production de froid",
+  code: "IND-UT-137",
+  name: "PAC en rehausse de température de chaleur fatale récupérée",
+  description: "Valorisation de la chaleur fatale du froid (rehausse par pompe à chaleur)",
   documents: ["Schéma frigorifique", "Puissances et régimes des groupes froids"],
   evaluate: (t) => {
     if (t.recuperateur) return { status: "non_eligible", reason: "Récupérateur déjà installé" };
@@ -453,9 +453,9 @@ const FICHE_RECUP: OpRule = {
 };
 
 const FICHE_VEV: OpRule = {
-  code: "IND-UT-134",
-  name: "Variateur de vitesse",
-  description: "Variation électronique de vitesse sur moteur de compresseur",
+  code: "IND-UT-102",
+  name: "Variation électronique de vitesse (VEV) sur moteur asynchrone",
+  description: "Variateur électronique de vitesse sur moteur de compresseur",
   documents: ["Fiches techniques des compresseurs"],
   evaluate: (t) => {
     const p = parseNum(t.puissanceCompresseurs);
@@ -465,8 +465,8 @@ const FICHE_VEV: OpRule = {
 };
 
 const FICHE_RECUP_DC: OpRule = {
-  code: "BAT-TH-146",
-  name: "Récupération de chaleur sur datacenter",
+  code: "IND-UT-137",
+  name: "PAC en rehausse de température de chaleur fatale récupérée",
   description: "Valorisation de la chaleur fatale des groupes froids / IT",
   documents: ["Bilan thermique IT", "Schéma de récupération de chaleur"],
   evaluate: (t) => {
@@ -492,9 +492,9 @@ const FICHE_GTB_DC: OpRule = {
 };
 
 const FICHE_PREREFROID: OpRule = {
-  code: "AGRI-TH-118",
+  code: "AGRI-TH-103",
   name: "Pré-refroidisseur de lait",
-  description: "Pré-refroidisseur sur tank à lait (à valider)",
+  description: "Installation d'un pré-refroidisseur de lait",
   documents: ["Caractéristiques du tank à lait"],
   evaluate: (t) => {
     if (!t.tankLait) return { status: "non_eligible", reason: "Pas de tank à lait" };
@@ -504,7 +504,9 @@ const FICHE_PREREFROID: OpRule = {
 };
 
 /* Sites industriels — récupération de chaleur fatale : une source (≥ seuil de
-   puissance) doit être valorisée vers un besoin (≥ seuil). Codes IND-UT à valider. */
+   puissance) doit être valorisée vers un besoin (≥ seuil). Fiches : IND-UT-103
+   (compresseur d'air), IND-UT-118 (four), IND-UT-137 (rehausse PAC sur chaleur
+   fatale, ex IND-UT-117 abrogée 07/2025). */
 function indusNeeds(t: DataMap): string[] {
   const needs: string[] = [];
   if (parseNum(t.besoinChauffageSurface) >= 2000) needs.push("Chauffage (≥ 2000 m²)");
@@ -515,6 +517,7 @@ function indusNeeds(t: DataMap): string[] {
 
 function ficheRecupSource(o: {
   code: string;
+  name: string;
   source: string;
   powerKey?: string;
   seuil?: number;
@@ -522,8 +525,8 @@ function ficheRecupSource(o: {
 }): OpRule {
   return {
     code: o.code,
-    name: `Récupération de chaleur sur ${o.source}`,
-    description: "Valorisation de la chaleur fatale vers un besoin (chauffage, ECS ou process)",
+    name: o.name,
+    description: `Récupération de chaleur sur ${o.source}, valorisée vers un besoin (chauffage, ECS ou process)`,
     documents: [
       "Bilan des puissances et températures des sources",
       "Schéma de récupération / besoins thermiques",
@@ -561,10 +564,33 @@ const RULES: Record<string, OpRule[]> = {
   agricole: [fichePAC(), FICHE_PREREFROID],
   scolaire: [fichePAC("surface", 3000)],
   industriel: [
-    ficheRecupSource({ code: "IND-UT-102", source: "fours", powerKey: "fourPuissance", seuil: 400 }),
-    ficheRecupSource({ code: "IND-UT-103", source: "groupes froid", powerKey: "groupeFroidPuissance", seuil: 300 }),
-    ficheRecupSource({ code: "IND-UT-129", source: "tours aéroréfrigérantes", boolKey: "toursAero" }),
-    ficheRecupSource({ code: "IND-UT-117", source: "compresseur d'air", powerKey: "compresseurPuissance", seuil: 200 }),
+    ficheRecupSource({
+      code: "IND-UT-118",
+      name: "Brûleur avec récupération de chaleur sur un four industriel",
+      source: "fours",
+      powerKey: "fourPuissance",
+      seuil: 400,
+    }),
+    ficheRecupSource({
+      code: "IND-UT-137",
+      name: "PAC en rehausse de température de chaleur fatale récupérée",
+      source: "groupes froid",
+      powerKey: "groupeFroidPuissance",
+      seuil: 300,
+    }),
+    ficheRecupSource({
+      code: "IND-UT-137",
+      name: "PAC en rehausse de température de chaleur fatale récupérée",
+      source: "tours aéroréfrigérantes",
+      boolKey: "toursAero",
+    }),
+    ficheRecupSource({
+      code: "IND-UT-103",
+      name: "Système de récupération de chaleur sur un compresseur d'air",
+      source: "compresseur d'air",
+      powerKey: "compresseurPuissance",
+      seuil: 200,
+    }),
   ],
 };
 
