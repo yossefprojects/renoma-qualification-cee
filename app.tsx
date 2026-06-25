@@ -310,7 +310,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
         { kind: "number", key: "fourPuissance", label: "Fours — puissance (kW) - seuil: 400", placeholder: "Ex: 600" },
         { kind: "number", key: "groupeFroidPuissance", label: "Groupes froid — puissance (kW) - seuil: 300", placeholder: "Ex: 400" },
         { kind: "number", key: "compresseurPuissance", label: "Compresseur d'air — puissance (kW) - seuil: 200", placeholder: "Ex: 250" },
-        { kind: "bool", key: "toursAero", label: "Tours aéroréfrigérantes présentes ?" },
+        { kind: "number", key: "toursAeroPuissance", label: "Tours aéroréfrigérantes — puissance (kW)", placeholder: "Ex: 150" },
       ],
     },
     {
@@ -562,10 +562,35 @@ function ficheHPF(code: string, opts: { boolKey?: string; numKey?: string; missi
   };
 }
 
+/* Condensation frigorifique à haute efficacité (IND-UT-113) — condenseur seul,
+   tour seule, ou condenseur + tour. S'applique aux centrales froides et aux
+   tours aéroréfrigérantes. */
+function ficheCondensationHE(opts: { boolKey?: string; numKey?: string; missing?: string }): OpRule {
+  return {
+    code: "IND-UT-113",
+    name: "Système de condensation frigorifique à haute efficacité",
+    description: "Condenseur / tour aéroréfrigérante à haute efficacité (faible ΔT de condensation)",
+    documents: [
+      "Étude technique (puissance frigorifique nominale)",
+      "Fiche technique du condenseur / de la tour",
+    ],
+    evaluate: (t) => {
+      if (opts.boolKey) {
+        if (!t[opts.boolKey]) return { status: "non_eligible", reason: "Pas de centrale / production de froid" };
+        return { status: "eligible" };
+      }
+      const v = parseNum(t[opts.numKey as string]);
+      if (!v) return { status: "a_verifier", reason: opts.missing || "À confirmer : puissance à renseigner" };
+      return { status: "eligible" };
+    },
+  };
+}
+
 /* Sites industriels — récupération de chaleur fatale : une source (≥ seuil de
    puissance) doit être valorisée vers un besoin (≥ seuil). Fiches : IND-UT-103
    (compresseur d'air), IND-UT-118 (four), IND-UT-139 (stockage / valorisation de
-   la chaleur fatale). HP flottante : BAT-TH-134 / IND-UT-116 / AGRI-UT-104. */
+   la chaleur fatale), IND-UT-113 (condensation HE / tours aéro). HP flottante :
+   BAT-TH-134 / IND-UT-116 / AGRI-UT-104. */
 function indusNeeds(t: DataMap): string[] {
   const needs: string[] = [];
   if (parseNum(t.besoinChauffageSurface) >= 2000) needs.push("Chauffage (≥ 2000 m²)");
@@ -622,6 +647,7 @@ const RULES: Record<string, OpRule[]> = {
     ficheGTB("surfaceVente", 1200),
     FICHE_MEUBLES,
     ficheHPF("BAT-TH-134", { boolKey: "centralesFroides" }),
+    ficheCondensationHE({ boolKey: "centralesFroides" }),
     fichePAC("surfaceVente"),
   ],
   entrepot_non_refrigere: [ficheGTB("surface", 2000), FICHE_DESTRAT, fichePAC()],
@@ -661,17 +687,15 @@ const RULES: Record<string, OpRule[]> = {
       seuil: 300,
     }),
     ficheRecupSource({
-      code: "IND-UT-139",
-      name: "Système de stockage de chaleur fatale",
-      source: "tours aéroréfrigérantes",
-      boolKey: "toursAero",
-    }),
-    ficheRecupSource({
       code: "IND-UT-103",
       name: "Système de récupération de chaleur sur un compresseur d'air",
       source: "compresseur d'air",
       powerKey: "compresseurPuissance",
       seuil: 200,
+    }),
+    ficheCondensationHE({
+      numKey: "toursAeroPuissance",
+      missing: "À confirmer : puissance tours aéroréfrigérantes à renseigner",
     }),
     ficheHPF("IND-UT-116", {
       numKey: "groupeFroidPuissance",
