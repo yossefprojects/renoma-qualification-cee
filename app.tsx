@@ -93,7 +93,7 @@ type Field =
   | { kind: "text"; key: string; label: string; placeholder?: string; span?: "full" }
   | { kind: "bool"; key: string; label: string; span?: "full" }
   | { kind: "checkgroup"; key: string; label: string; options: string[]; span?: "full" }
-  | { kind: "group"; key: string; label: string; fields: Field[] }
+  | { kind: "group"; key: string; label: string; fields: Field[]; showIf?: string; tone?: "sky" }
   | { kind: "spacer"; key: string };
 
 const CHAUFFAGE = [
@@ -161,6 +161,23 @@ const TECH_FIELDS: Record<string, Field[]> = {
       span: "full",
     },
     { kind: "bool", key: "groupesFroids", label: "Présence de groupes froids ?", span: "full" },
+    {
+      kind: "group",
+      key: "froidHospi",
+      label: "",
+      tone: "sky",
+      showIf: "groupesFroids",
+      fields: [
+        { kind: "number", key: "puissanceCompresseurs", label: "Puissance compresseurs (kW)", placeholder: "Ex: 120" },
+        {
+          kind: "select",
+          key: "usagePrincipal",
+          label: "Usage principal",
+          options: ["Process médical", "Confort", "Mixte"],
+        },
+        { kind: "bool", key: "recuperateur", label: "Récupérateur déjà installé ?" },
+      ],
+    },
     { kind: "select", key: "chauffage", label: "Mode de chauffage", options: CHAUFFAGE },
     { kind: "boolselect", key: "gtb", label: "GTB/GTC existante ?" },
   ],
@@ -479,9 +496,26 @@ const FICHE_RECUP_DC: OpRule = {
   },
 };
 
+function ficheRecupFatale(opts: { presenceKey?: string; powerKey: string }): OpRule {
+  return {
+    code: "IND-UT-139",
+    name: "Système de stockage de chaleur fatale",
+    description: "Récupération et valorisation de la chaleur fatale des groupes froids",
+    documents: ["Schéma frigorifique", "Puissances et régimes des groupes froids"],
+    evaluate: (t) => {
+      if (opts.presenceKey && !t[opts.presenceKey])
+        return { status: "non_eligible", reason: "Pas de groupe de production de froid" };
+      if (t.recuperateur) return { status: "non_eligible", reason: "Récupérateur déjà installé" };
+      const p = parseNum(t[opts.powerKey]);
+      if (!p) return { status: "a_verifier", reason: "À confirmer : puissance compresseurs à renseigner" };
+      return { status: "eligible" };
+    },
+  };
+}
+
 const FICHE_GTB_DC: OpRule = {
   code: "BAT-TH-116",
-  name: "Système de GTB",
+  name: "Système de gestion technique du bâtiment",
   description: "Gestion technique du bâtiment (datacenter)",
   documents: ["Synoptique CVC / schéma de principe"],
   evaluate: (t) => {
@@ -578,7 +612,11 @@ function ficheRecupSource(o: {
 
 /* Catalogue par type de site (seuils repris des maquettes). */
 const RULES: Record<string, OpRule[]> = {
-  hospitalier: [fichePAC(), ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" })],
+  hospitalier: [
+    fichePAC(),
+    ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" }),
+    ficheRecupFatale({ presenceKey: "groupesFroids", powerKey: "puissanceCompresseurs" }),
+  ],
   hotellerie: [fichePAC(), ficheGTBrooms(200), ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" })],
   distribution: [
     ficheGTB("surfaceVente", 1200),
@@ -975,12 +1013,21 @@ function FieldRenderer({
           onChange={set}
         />
       );
-    case "group":
+    case "group": {
+      if (field.showIf && !data[field.showIf]) return null;
+      const sky = field.tone === "sky";
       return (
-        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 md:col-span-2">
-          <h4 className="mb-3 text-sm font-bold text-slate-900" style={HEADING}>
-            {field.label}
-          </h4>
+        <div
+          className={cn(
+            "rounded-xl border p-4 md:col-span-2",
+            sky ? "border-sky-200 bg-sky-50/70" : "border-slate-200 bg-slate-50/70",
+          )}
+        >
+          {field.label && (
+            <h4 className="mb-3 text-sm font-bold text-slate-900" style={HEADING}>
+              {field.label}
+            </h4>
+          )}
           <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
             {field.fields.map((f) => (
               <FieldRenderer key={f.key} field={f} data={data} setData={setData} />
@@ -988,6 +1035,7 @@ function FieldRenderer({
           </div>
         </div>
       );
+    }
     case "spacer":
       return <div className="hidden md:block" aria-hidden="true" />;
     default:
