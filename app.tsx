@@ -440,9 +440,9 @@ const FICHE_MEUBLES: OpRule = {
 };
 
 const FICHE_RECUP: OpRule = {
-  code: "IND-UT-137",
-  name: "PAC en rehausse de température de chaleur fatale récupérée",
-  description: "Valorisation de la chaleur fatale du froid (rehausse par pompe à chaleur)",
+  code: "IND-UT-139",
+  name: "Système de stockage de chaleur fatale",
+  description: "Récupération et valorisation de la chaleur fatale du froid",
   documents: ["Schéma frigorifique", "Puissances et régimes des groupes froids"],
   evaluate: (t) => {
     if (t.recuperateur) return { status: "non_eligible", reason: "Récupérateur déjà installé" };
@@ -465,9 +465,9 @@ const FICHE_VEV: OpRule = {
 };
 
 const FICHE_RECUP_DC: OpRule = {
-  code: "IND-UT-137",
-  name: "PAC en rehausse de température de chaleur fatale récupérée",
-  description: "Valorisation de la chaleur fatale des groupes froids / IT",
+  code: "IND-UT-139",
+  name: "Système de stockage de chaleur fatale",
+  description: "Récupération et valorisation de la chaleur fatale des groupes froids / IT",
   documents: ["Bilan thermique IT", "Schéma de récupération de chaleur"],
   evaluate: (t) => {
     if (t.recuperateur) return { status: "non_eligible", reason: "Récupérateur déjà installé" };
@@ -503,10 +503,35 @@ const FICHE_PREREFROID: OpRule = {
   },
 };
 
+/* Haute pression flottante (régulation condensation sur groupe de froid).
+   Même opération, code par secteur : BAT-TH-134 (tertiaire), IND-UT-116
+   (industrie), AGRI-UT-104 (agricole). */
+function ficheHPF(code: string, opts: { boolKey?: string; numKey?: string; missing?: string }): OpRule {
+  return {
+    code,
+    name: "Régulation haute pression flottante sur groupe de production de froid",
+    description: "Système de régulation permettant une haute pression flottante (condensation optimisée)",
+    documents: [
+      "Étude technique (besoins de froid, puissance nominale)",
+      "Fiche technique du système de régulation",
+    ],
+    evaluate: (t) => {
+      if (opts.boolKey) {
+        if (!t[opts.boolKey]) return { status: "non_eligible", reason: "Pas de groupe de production de froid" };
+        return { status: "eligible" };
+      }
+      const v = parseNum(t[opts.numKey as string]);
+      if (!v)
+        return { status: "a_verifier", reason: opts.missing || "À confirmer : groupe de production de froid à renseigner" };
+      return { status: "eligible" };
+    },
+  };
+}
+
 /* Sites industriels — récupération de chaleur fatale : une source (≥ seuil de
    puissance) doit être valorisée vers un besoin (≥ seuil). Fiches : IND-UT-103
-   (compresseur d'air), IND-UT-118 (four), IND-UT-137 (rehausse PAC sur chaleur
-   fatale, ex IND-UT-117 abrogée 07/2025). */
+   (compresseur d'air), IND-UT-118 (four), IND-UT-139 (stockage / valorisation de
+   la chaleur fatale). HP flottante : BAT-TH-134 / IND-UT-116 / AGRI-UT-104. */
 function indusNeeds(t: DataMap): string[] {
   const needs: string[] = [];
   if (parseNum(t.besoinChauffageSurface) >= 2000) needs.push("Chauffage (≥ 2000 m²)");
@@ -553,15 +578,34 @@ function ficheRecupSource(o: {
 
 /* Catalogue par type de site (seuils repris des maquettes). */
 const RULES: Record<string, OpRule[]> = {
-  hospitalier: [fichePAC()],
-  hotellerie: [fichePAC(), ficheGTBrooms(200)],
-  distribution: [ficheGTB("surfaceVente", 1200), FICHE_MEUBLES, fichePAC("surfaceVente")],
+  hospitalier: [fichePAC(), ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" })],
+  hotellerie: [fichePAC(), ficheGTBrooms(200), ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" })],
+  distribution: [
+    ficheGTB("surfaceVente", 1200),
+    FICHE_MEUBLES,
+    ficheHPF("BAT-TH-134", { boolKey: "centralesFroides" }),
+    fichePAC("surfaceVente"),
+  ],
   entrepot_non_refrigere: [ficheGTB("surface", 2000), FICHE_DESTRAT, fichePAC()],
-  entrepot_frigorifique: [FICHE_RECUP, FICHE_VEV, ficheGTB("surfaceZone", 800), fichePAC("surfaceZone")],
-  centre_commercial: [ficheGTB("surfaceGalerie", 5000), fichePAC("surfaceGalerie")],
-  datacenter: [FICHE_RECUP_DC, FICHE_GTB_DC],
+  entrepot_frigorifique: [
+    FICHE_RECUP,
+    ficheHPF("BAT-TH-134", { numKey: "nbGroupesFroids", missing: "À confirmer : nombre de groupes froids à renseigner" }),
+    FICHE_VEV,
+    ficheGTB("surfaceZone", 800),
+    fichePAC("surfaceZone"),
+  ],
+  centre_commercial: [
+    ficheGTB("surfaceGalerie", 5000),
+    ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" }),
+    fichePAC("surfaceGalerie"),
+  ],
+  datacenter: [
+    FICHE_RECUP_DC,
+    ficheHPF("IND-UT-116", { numKey: "puissanceCompresseurs", missing: "À confirmer : puissance compresseurs à renseigner" }),
+    FICHE_GTB_DC,
+  ],
   bureaux: [ficheGTB("surface", 2000), fichePAC("surface", 3000)],
-  agricole: [fichePAC(), FICHE_PREREFROID],
+  agricole: [fichePAC(), FICHE_PREREFROID, ficheHPF("AGRI-UT-104", { boolKey: "tankLait" })],
   scolaire: [fichePAC("surface", 3000)],
   industriel: [
     ficheRecupSource({
@@ -572,15 +616,15 @@ const RULES: Record<string, OpRule[]> = {
       seuil: 400,
     }),
     ficheRecupSource({
-      code: "IND-UT-137",
-      name: "PAC en rehausse de température de chaleur fatale récupérée",
+      code: "IND-UT-139",
+      name: "Système de stockage de chaleur fatale",
       source: "groupes froid",
       powerKey: "groupeFroidPuissance",
       seuil: 300,
     }),
     ficheRecupSource({
-      code: "IND-UT-137",
-      name: "PAC en rehausse de température de chaleur fatale récupérée",
+      code: "IND-UT-139",
+      name: "Système de stockage de chaleur fatale",
       source: "tours aéroréfrigérantes",
       boolKey: "toursAero",
     }),
@@ -590,6 +634,10 @@ const RULES: Record<string, OpRule[]> = {
       source: "compresseur d'air",
       powerKey: "compresseurPuissance",
       seuil: 200,
+    }),
+    ficheHPF("IND-UT-116", {
+      numKey: "groupeFroidPuissance",
+      missing: "À confirmer : puissance groupes froid à renseigner",
     }),
   ],
 };
