@@ -308,9 +308,13 @@ const TECH_FIELDS: Record<string, Field[]> = {
       label: "Sources de chaleur fatale",
       fields: [
         { kind: "number", key: "fourPuissance", label: "Fours — puissance (kW) - seuil: 400", placeholder: "Ex: 600" },
+        { kind: "number", key: "fourQuantite", label: "Fours — quantité", placeholder: "Ex: 2" },
         { kind: "number", key: "groupeFroidPuissance", label: "Groupes froid — puissance (kW) - seuil: 300", placeholder: "Ex: 400" },
+        { kind: "number", key: "groupeFroidQuantite", label: "Groupes froid — quantité", placeholder: "Ex: 3" },
         { kind: "number", key: "compresseurPuissance", label: "Compresseur d'air — puissance (kW) - seuil: 200", placeholder: "Ex: 250" },
+        { kind: "number", key: "compresseurQuantite", label: "Compresseur d'air — quantité", placeholder: "Ex: 2" },
         { kind: "number", key: "toursAeroPuissance", label: "Tours aéroréfrigérantes — puissance (kW)", placeholder: "Ex: 150" },
+        { kind: "number", key: "toursAeroQuantite", label: "Tours aéroréfrigérantes — quantité", placeholder: "Ex: 1" },
       ],
     },
     {
