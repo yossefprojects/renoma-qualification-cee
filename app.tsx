@@ -23,6 +23,7 @@ import {
   MapPin,
   Phone,
   Printer,
+  RotateCcw,
   Thermometer,
   User,
   XCircle,
@@ -1397,13 +1398,28 @@ export default function RenomaQualificationProspect() {
   const goPrev = () => {
     if (step > 1) setStep(step - 1);
   };
+  const reset = () => {
+    setStep(1);
+    setZone("");
+    setSiteType("");
+    setIdent({ ...EMPTY_IDENT });
+    setTechnique({});
+    setRemarque("");
+  };
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-sky-50/60 via-slate-50 to-slate-50 px-4 py-8 font-sans sm:px-6 print:min-h-0 print:bg-white print:p-0">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
         <header className="mb-7 flex flex-wrap items-center gap-x-5 gap-y-2 print:hidden">
-          <Logo />
+          <button
+            type="button"
+            onClick={reset}
+            title="Nouveau prospect"
+            className="cursor-pointer rounded-lg bg-transparent p-0 transition-opacity hover:opacity-70"
+          >
+            <Logo />
+          </button>
           <div className="hidden h-9 w-px bg-slate-200 sm:block" />
           <div>
             <h1 className="text-xl font-bold leading-tight text-slate-900 sm:text-2xl" style={HEADING}>
@@ -1739,14 +1755,24 @@ export default function RenomaQualificationProspect() {
               <ArrowRight className="size-4" />
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="inline-flex h-11 items-center gap-2 rounded-lg bg-sky-700 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-800"
-            >
-              <Download className="size-4" />
-              Télécharger le rapport
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={reset}
+                className="inline-flex h-11 items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                <RotateCcw className="size-4" />
+                Recommencer
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex h-11 items-center gap-2 rounded-lg bg-sky-700 px-6 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-800"
+              >
+                <Download className="size-4" />
+                Télécharger le rapport
+              </button>
+            </div>
           )}
         </div>
       </div>
