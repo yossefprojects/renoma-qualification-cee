@@ -1263,6 +1263,7 @@ export default function RenomaQualificationProspect() {
   const [siteType, setSiteType] = useState("");
   const [ident, setIdent] = useState({ ...EMPTY_IDENT });
   const [technique, setTechnique] = useState<DataMap>({});
+  const [remarque, setRemarque] = useState("");
 
   const site = SITE_TYPES.find((s) => s.key === siteType);
   const techFields = (siteType && TECH_FIELDS[siteType]) || [];
@@ -1566,6 +1567,19 @@ export default function RenomaQualificationProspect() {
                   </ul>
                 )}
               </div>
+
+              <div className="rounded-xl border border-slate-200 p-5">
+                <h3 className="mb-3 text-base font-bold text-slate-900" style={HEADING}>
+                  Remarque finale
+                </h3>
+                <textarea
+                  value={remarque}
+                  onChange={(e) => setRemarque(e.target.value)}
+                  rows={5}
+                  placeholder="Observations, recommandations, points d'attention pour ce prospect…"
+                  className="w-full resize-y rounded-lg border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                />
+              </div>
             </div>
           )}
 
@@ -1577,6 +1591,7 @@ export default function RenomaQualificationProspect() {
               identified={identified}
               documents={documents}
               techSummary={techniqueSummary(techFields, technique)}
+              remarque={remarque}
             />
           )}
         </div>
@@ -1641,12 +1656,14 @@ function ReportView({
   identified,
   documents,
   techSummary,
+  remarque,
 }: {
   site: SiteType | undefined;
   ident: typeof EMPTY_IDENT;
   identified: OpResult[];
   documents: string[];
   techSummary: Array<{ label: string; value: string }>;
+  remarque: string;
 }) {
   return (
     <div className="space-y-7">
@@ -1761,6 +1778,15 @@ function ReportView({
           </ul>
         )}
       </section>
+
+      {remarque.trim() && (
+        <section>
+          <h3 className="mb-3 border-b border-slate-200 pb-2 text-base font-bold text-slate-900" style={HEADING}>
+            Remarque
+          </h3>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">{remarque}</p>
+        </section>
+      )}
 
       {/* Signatures */}
       <div className="grid grid-cols-1 gap-8 border-t border-slate-200 pt-6 sm:grid-cols-2">
