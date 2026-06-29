@@ -15,6 +15,7 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  Clock,
   Download,
   FileText,
   Home,
@@ -660,18 +661,16 @@ const RULES: Record<string, OpRule[]> = {
   ],
   bureaux: [ficheGTB("surface", 2000), fichePAC("surface", 3000)],
   scolaire: [fichePAC("surface", 3000)],
-  /* ---------- Industrie (IND) ---------- */
   entrepot_frigorifique: [
-    FICHE_RECUP,
-    ficheCondensationHE({ numKey: "nbGroupesFroids", missing: "À confirmer : nombre de groupes froids à renseigner" }),
-    ficheHPF("IND-UT-116", { numKey: "nbGroupesFroids", missing: "À confirmer : nombre de groupes froids à renseigner" }),
-    FICHE_VEV,
+    ficheHPF("BAT-TH-134", { numKey: "nbGroupesFroids", missing: "À confirmer : nombre de groupes froids à renseigner" }),
+    ficheGTB("surfaceZone", 800),
+    fichePAC("surfaceZone"),
   ],
   datacenter: [
-    FICHE_RECUP_DC,
-    ficheCondensationHE({ numKey: "puissanceCompresseurs", missing: "À confirmer : puissance compresseurs à renseigner" }),
-    ficheHPF("IND-UT-116", { numKey: "puissanceCompresseurs", missing: "À confirmer : puissance compresseurs à renseigner" }),
+    ficheHPF("BAT-TH-134", { numKey: "puissanceCompresseurs", missing: "À confirmer : puissance compresseurs à renseigner" }),
+    ficheGTB("surfaceIT", 1000),
   ],
+  /* ---------- Industrie (IND) — uniquement le Site Industriel ---------- */
   industriel: [
     ficheRecupSource({
       code: "IND-UT-118",
@@ -812,6 +811,32 @@ function DateField({
         <Calendar className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
         <input
           type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={cn(inputCls, "pl-9 pr-3.5")}
+        />
+      </div>
+    </Field>
+  );
+}
+
+function TimeField({
+  label,
+  value,
+  onChange,
+  span,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  span?: "full";
+}) {
+  return (
+    <Field label={label} span={span}>
+      <div className="relative">
+        <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+        <input
+          type="time"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={cn(inputCls, "pl-9 pr-3.5")}
@@ -1253,7 +1278,8 @@ const EMPTY_IDENT = {
   adresse: "",
   telephone: "",
   email: "",
-  dateVisite: "",
+  dateRappel: "",
+  heureRappel: "",
 };
 
 export default function RenomaQualificationProspect() {
@@ -1445,10 +1471,14 @@ export default function RenomaQualificationProspect() {
                 placeholder="contact@hotel.com"
               />
               <DateField
-                span="full"
-                label="Date de visite (prévue)"
-                value={ident.dateVisite}
-                onChange={(v) => setIdent({ ...ident, dateVisite: v })}
+                label="Date de rappel"
+                value={ident.dateRappel}
+                onChange={(v) => setIdent({ ...ident, dateRappel: v })}
+              />
+              <TimeField
+                label="Heure de rappel"
+                value={ident.heureRappel}
+                onChange={(v) => setIdent({ ...ident, heureRappel: v })}
               />
             </div>
           )}
@@ -1706,7 +1736,8 @@ function ReportView({
           <ReportLine label="Téléphone" value={ident.telephone || "-"} />
           <ReportLine label="Contact" value={ident.contact || "-"} />
           <ReportLine label="Email" value={ident.email || "-"} />
-          <ReportLine label="Date de visite" value={ident.dateVisite || "À planifier"} />
+          <ReportLine label="Date de rappel" value={ident.dateRappel || "À planifier"} />
+          <ReportLine label="Heure de rappel" value={ident.heureRappel || "-"} />
         </div>
       </section>
 
