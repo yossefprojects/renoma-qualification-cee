@@ -126,10 +126,10 @@ const EMETTEURS = [
 const ESPACE_TECHNIQUE = ["Local intérieur", "Cabane extérieure possible", "Non"];
 
 /* Questions techniques (étape 3) — un jeu par type de site.
-   Les libellés reprennent les seuils visibles sur les maquettes. */
+   (Les seuils d'éligibilité sont gérés dans RULES, non affichés à l'utilisateur.) */
 const TECH_FIELDS: Record<string, Field[]> = {
   hotellerie: [
-    { kind: "number", key: "nbChambres", label: "Nombre de chambres (seuil: 200)", placeholder: "Ex: 250" },
+    { kind: "number", key: "nbChambres", label: "Nombre de chambres", placeholder: "Ex: 250" },
     { kind: "number", key: "surface", label: "Surface chauffée totale (m²)", placeholder: "Ex: 5000" },
     { kind: "select", key: "chauffage", label: "Mode de chauffage actuel", options: CHAUFFAGE },
     {
@@ -183,7 +183,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
     { kind: "boolselect", key: "gtb", label: "GTB/GTC existante ?" },
   ],
   distribution: [
-    { kind: "number", key: "surfaceVente", label: "Surface de vente (m²) - seuil: 1200 m²", placeholder: "Ex: 2500" },
+    { kind: "number", key: "surfaceVente", label: "Surface de vente (m²)", placeholder: "Ex: 2500" },
     { kind: "number", key: "hauteur", label: "Hauteur sous plafond (m)", placeholder: "Ex: 6" },
     {
       kind: "select",
@@ -199,10 +199,10 @@ const TECH_FIELDS: Record<string, Field[]> = {
     {
       kind: "number",
       key: "surface",
-      label: "Surface chauffée (m²) - seuils: GTB 2000 / Destrat 1000",
+      label: "Surface chauffée (m²)",
       placeholder: "Ex: 5000",
     },
-    { kind: "number", key: "hauteur", label: "Hauteur sous plafond (m) - seuil destrat: 4m", placeholder: "Ex: 8" },
+    { kind: "number", key: "hauteur", label: "Hauteur sous plafond (m)", placeholder: "Ex: 8" },
     { kind: "select", key: "chauffage", label: "Mode de chauffage actuel", options: CHAUFFAGE },
     { kind: "text", key: "ageChaudiere", label: "Âge de la chaudière (si gaz/fioul)", placeholder: "Ex: 15 ans" },
     { kind: "boolselect", key: "gtb", label: "GTB/Régulation existante ?" },
@@ -219,7 +219,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
       key: "zoneChauffable",
       label: "Zone chauffable (bureaux, expédition…)",
       fields: [
-        { kind: "number", key: "surfaceZone", label: "Surface zone chauffable (m²) - seuil: 800", placeholder: "Ex: 1000" },
+        { kind: "number", key: "surfaceZone", label: "Surface zone chauffable (m²)", placeholder: "Ex: 1000" },
         { kind: "number", key: "hauteurZone", label: "Hauteur zone chauffable (m)", placeholder: "Ex: 6" },
       ],
     },
@@ -230,7 +230,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
     {
       kind: "number",
       key: "surfaceGalerie",
-      label: "Surface galerie chauffée (m²) - seuil GTB: 5000",
+      label: "Surface galerie chauffée (m²)",
       placeholder: "Ex: 8000",
     },
     { kind: "number", key: "hauteurGalerie", label: "Hauteur sous plafond galerie (m)", placeholder: "Ex: 5" },
@@ -268,7 +268,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
     {
       kind: "number",
       key: "surface",
-      label: "Surface chauffée (m²) - seuils: GTB 2000 / PAC 3000",
+      label: "Surface chauffée (m²)",
       placeholder: "Ex: 3500",
     },
     { kind: "select", key: "chauffage", label: "Mode de chauffage actuel", options: CHAUFFAGE },
@@ -296,7 +296,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
       label: "Type d'établissement",
       options: ["École primaire", "Collège", "Lycée", "Université", "Centre de formation"],
     },
-    { kind: "number", key: "surface", label: "Surface chauffée (m²) - seuil PAC: 3000", placeholder: "Ex: 4000" },
+    { kind: "number", key: "surface", label: "Surface chauffée (m²)", placeholder: "Ex: 4000" },
     { kind: "select", key: "chauffage", label: "Mode de chauffage actuel", options: CHAUFFAGE },
     { kind: "text", key: "ageChaudiere", label: "Âge de la chaudière (si gaz/fioul)", placeholder: "Ex: 20 ans" },
     { kind: "select", key: "espaceTechnique", label: "Espace technique disponible", options: ESPACE_TECHNIQUE },
@@ -308,11 +308,11 @@ const TECH_FIELDS: Record<string, Field[]> = {
       key: "sources",
       label: "Sources de chaleur fatale",
       fields: [
-        { kind: "number", key: "fourPuissance", label: "Fours — puissance (kW) - seuil: 400", placeholder: "Ex: 600" },
+        { kind: "number", key: "fourPuissance", label: "Fours — puissance (kW)", placeholder: "Ex: 600" },
         { kind: "number", key: "fourQuantite", label: "Fours — quantité", placeholder: "Ex: 2" },
-        { kind: "number", key: "groupeFroidPuissance", label: "Groupes froid — puissance (kW) - seuil: 300", placeholder: "Ex: 400" },
+        { kind: "number", key: "groupeFroidPuissance", label: "Groupes froid — puissance (kW)", placeholder: "Ex: 400" },
         { kind: "number", key: "groupeFroidQuantite", label: "Groupes froid — quantité", placeholder: "Ex: 3" },
-        { kind: "number", key: "compresseurPuissance", label: "Compresseur d'air — puissance (kW) - seuil: 200", placeholder: "Ex: 250" },
+        { kind: "number", key: "compresseurPuissance", label: "Compresseur d'air — puissance (kW)", placeholder: "Ex: 250" },
         { kind: "number", key: "compresseurQuantite", label: "Compresseur d'air — quantité", placeholder: "Ex: 2" },
         { kind: "number", key: "toursAeroPuissance", label: "Tours aéroréfrigérantes — puissance (kW)", placeholder: "Ex: 150" },
         { kind: "number", key: "toursAeroQuantite", label: "Tours aéroréfrigérantes — quantité", placeholder: "Ex: 1" },
@@ -323,8 +323,8 @@ const TECH_FIELDS: Record<string, Field[]> = {
       key: "besoins",
       label: "Besoins thermiques valorisables",
       fields: [
-        { kind: "number", key: "besoinChauffageSurface", label: "Chauffage — surface (m²) - seuil: 2000", placeholder: "Ex: 3000" },
-        { kind: "number", key: "besoinEcsVolume", label: "ECS — volume (m³) - seuil: 10", placeholder: "Ex: 20" },
+        { kind: "number", key: "besoinChauffageSurface", label: "Chauffage — surface (m²)", placeholder: "Ex: 3000" },
+        { kind: "number", key: "besoinEcsVolume", label: "ECS — volume (m³)", placeholder: "Ex: 20" },
         { kind: "bool", key: "besoinProcess", label: "Besoin process industriel ?" },
       ],
     },
