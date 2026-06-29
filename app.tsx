@@ -1399,10 +1399,10 @@ export default function RenomaQualificationProspect() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-sky-50/60 via-slate-50 to-slate-50 px-4 py-8 font-sans sm:px-6">
+    <div className="min-h-screen w-full bg-gradient-to-b from-sky-50/60 via-slate-50 to-slate-50 px-4 py-8 font-sans sm:px-6 print:min-h-0 print:bg-white print:p-0">
       <div className="mx-auto max-w-5xl">
         {/* Header */}
-        <header className="mb-7 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <header className="mb-7 flex flex-wrap items-center gap-x-5 gap-y-2 print:hidden">
           <Logo />
           <div className="hidden h-9 w-px bg-slate-200 sm:block" />
           <div>
@@ -1414,7 +1414,7 @@ export default function RenomaQualificationProspect() {
         </header>
 
         {/* Progress */}
-        <div className="mb-5">
+        <div className="mb-5 print:hidden">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-semibold text-sky-700">Étape {step} / 7</span>
             {stepName && <span className="text-sm text-slate-400">{stepName}</span>}
@@ -1428,7 +1428,7 @@ export default function RenomaQualificationProspect() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 print:rounded-none print:border-0 print:p-0 print:shadow-none">
           {meta && (
             <div className="mb-6">
               <div className="flex items-center gap-2">
@@ -1712,7 +1712,7 @@ export default function RenomaQualificationProspect() {
         </div>
 
         {/* Nav */}
-        <div className="mt-6 flex items-center justify-between gap-3">
+        <div className="mt-6 flex items-center justify-between gap-3 print:hidden">
           <button
             type="button"
             onClick={goPrev}
@@ -1798,7 +1798,7 @@ function ReportView({
         <button
           type="button"
           onClick={() => window.print()}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-sky-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-800"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-sky-700 px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-sky-800 print:hidden"
         >
           <Printer className="size-4" />
           Imprimer
