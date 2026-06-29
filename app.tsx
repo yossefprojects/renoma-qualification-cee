@@ -124,7 +124,7 @@ const EMETTEURS = [
   "Mixte",
 ];
 const ESPACE_TECHNIQUE = ["Local intérieur", "Cabane extérieure possible", "Non"];
-const TYPE_CONDENSEUR = ["À air", "À eau", "Évaporatif / adiabatique", "CO₂ transcritique", "Autre"];
+const TYPE_CONDENSEUR = ["À condensation", "Hydraulique"];
 
 /* Caractérisation détaillée des groupes froids — révélée quand la présence de
    froid est cochée. Réutilisée par tous les types de site concernés. */
