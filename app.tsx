@@ -1332,6 +1332,7 @@ function techniqueSummary(fields: Field[], t: DataMap): Array<{ label: string; v
 const EMPTY_IDENT = {
   raisonSociale: "",
   contact: "",
+  fonctionContact: "",
   adresse: "",
   telephone: "",
   email: "",
@@ -1503,6 +1504,12 @@ export default function RenomaQualificationProspect() {
                 placeholder="Ex: Jean Dupont"
               />
               <TextField
+                label="Fonction du contact"
+                value={ident.fonctionContact}
+                onChange={(v) => setIdent({ ...ident, fonctionContact: v })}
+                placeholder="Ex: Directeur technique"
+              />
+              <TextField
                 span="full"
                 label="Adresse du site"
                 required
@@ -1604,6 +1611,7 @@ export default function RenomaQualificationProspect() {
                   <ReportLine label="Adresse" value={ident.adresse || "—"} />
                   <ReportLine label="Tel" value={ident.telephone || "Non renseigné"} />
                   <ReportLine label="Contact" value={ident.contact || "—"} />
+                  <ReportLine label="Fonction" value={ident.fonctionContact || "—"} />
                 </div>
               </div>
 
@@ -1794,6 +1802,7 @@ function ReportView({
           <ReportLine label="Zone climatique" value={climateZone(ident.adresse) || "-"} />
           <ReportLine label="Téléphone" value={ident.telephone || "-"} />
           <ReportLine label="Contact" value={ident.contact || "-"} />
+          <ReportLine label="Fonction" value={ident.fonctionContact || "-"} />
           <ReportLine label="Email" value={ident.email || "-"} />
           <ReportLine label="Date de rappel" value={ident.dateRappel || "À planifier"} />
           <ReportLine label="Heure de rappel" value={ident.heureRappel || "-"} />
