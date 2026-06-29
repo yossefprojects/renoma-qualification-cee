@@ -124,6 +124,20 @@ const EMETTEURS = [
   "Mixte",
 ];
 const ESPACE_TECHNIQUE = ["Local intérieur", "Cabane extérieure possible", "Non"];
+const TYPE_CONDENSEUR = ["À air", "À eau", "Évaporatif / adiabatique", "CO₂ transcritique", "Autre"];
+
+/* Caractérisation détaillée des groupes froids — révélée quand la présence de
+   froid est cochée. Réutilisée par tous les types de site concernés. */
+const FROID_FIELDS: Field[] = [
+  { kind: "number", key: "nbCentralesPositives", label: "Nombre de centrales positives", placeholder: "Ex: 2" },
+  { kind: "number", key: "nbCentralesNegatives", label: "Nombre de centrales négatives", placeholder: "Ex: 1" },
+  { kind: "number", key: "puissanceCompresseurs", label: "Puissance compresseurs totale (kW)", placeholder: "Ex: 150" },
+  { kind: "select", key: "typeCondenseur", label: "Type de condenseur", options: TYPE_CONDENSEUR },
+  { kind: "bool", key: "recuperateur", label: "Récupérateur existant ?" },
+];
+function froidGroup(showIfKey: string): Field {
+  return { kind: "group", key: `froid-${showIfKey}`, label: "", tone: "sky", showIf: showIfKey, fields: FROID_FIELDS };
+}
 
 /* Questions techniques (étape 3) — un jeu par type de site.
    (Les seuils d'éligibilité sont gérés dans RULES, non affichés à l'utilisateur.) */
@@ -138,6 +152,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
       label: "Présence de groupes froids (climatisation, cuisine froide) ?",
       span: "full",
     },
+    froidGroup("groupesFroids"),
     {
       kind: "checkgroup",
       key: "equipements",
@@ -169,14 +184,13 @@ const TECH_FIELDS: Record<string, Field[]> = {
       tone: "sky",
       showIf: "groupesFroids",
       fields: [
-        { kind: "number", key: "puissanceCompresseurs", label: "Puissance compresseurs (kW)", placeholder: "Ex: 120" },
+        ...FROID_FIELDS,
         {
           kind: "select",
           key: "usagePrincipal",
-          label: "Usage principal",
+          label: "Usage principal de la chaleur",
           options: ["Process médical", "Confort", "Mixte"],
         },
-        { kind: "bool", key: "recuperateur", label: "Récupérateur déjà installé ?" },
       ],
     },
     { kind: "select", key: "chauffage", label: "Mode de chauffage", options: CHAUFFAGE },
@@ -192,6 +206,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
       options: ["Oui", "Non", "Je ne sais pas"],
     },
     { kind: "bool", key: "centralesFroides", label: "Présence de centrales froides ?", span: "full" },
+    froidGroup("centralesFroides"),
     { kind: "select", key: "chauffage", label: "Mode de chauffage", options: CHAUFFAGE },
     { kind: "boolselect", key: "gtb", label: "GTB/GTC existante ?" },
   ],
@@ -213,6 +228,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
     { kind: "number", key: "nbGroupesFroids", label: "Nombre de groupes froids", placeholder: "Ex: 4" },
     { kind: "number", key: "puissanceCompresseurs", label: "Puissance compresseurs totale (kW)", placeholder: "Ex: 200" },
     { kind: "select", key: "fluide", label: "Fluide frigorigène", options: FLUIDES },
+    { kind: "select", key: "typeCondenseur", label: "Type de condenseur", options: TYPE_CONDENSEUR },
     { kind: "bool", key: "recuperateur", label: "Récupérateur existant ?" },
     {
       kind: "group",
@@ -236,6 +252,8 @@ const TECH_FIELDS: Record<string, Field[]> = {
     { kind: "number", key: "hauteurGalerie", label: "Hauteur sous plafond galerie (m)", placeholder: "Ex: 5" },
     { kind: "select", key: "chauffage", label: "Mode de chauffage galerie", options: CHAUFFAGE },
     { kind: "boolselect", key: "gtc", label: "GTC existante ?" },
+    { kind: "bool", key: "groupesFroids", label: "Présence de groupes froids ?", span: "full" },
+    froidGroup("groupesFroids"),
     {
       kind: "checkgroup",
       key: "equipementsPilotables",
@@ -254,6 +272,7 @@ const TECH_FIELDS: Record<string, Field[]> = {
         { kind: "number", key: "puissanceCompresseurs", label: "Puissance compresseurs totale (kW)", placeholder: "Ex: 500" },
         { kind: "select", key: "positionnementGF", label: "Positionnement des GF", options: POSITIONNEMENT_GF },
         { kind: "select", key: "fluide", label: "Fluide frigorigène", options: FLUIDES },
+        { kind: "select", key: "typeCondenseur", label: "Type de condenseur", options: TYPE_CONDENSEUR },
         { kind: "bool", key: "recuperateur", label: "Récupérateur existant ?" },
       ],
     },
