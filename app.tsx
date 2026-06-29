@@ -372,6 +372,28 @@ function getSurface(t: DataMap): number {
   return 0;
 }
 
+/* Zonage climatique CEE (H1/H2/H3) déduit du code postal de l'adresse.
+   H2 et H3 explicites ; tout autre département métropolitain = H1 ; DOM = aucune. */
+const ZONE_H2 = new Set([
+  "04", "07", "09", "12", "16", "17", "18", "22", "24", "26", "29", "31", "32", "33", "35", "36", "37",
+  "40", "41", "44", "46", "47", "48", "49", "50", "53", "56", "64", "65", "72", "79", "81", "82", "84", "85", "86",
+]);
+const ZONE_H3 = new Set(["06", "11", "13", "20", "2A", "2B", "30", "34", "66", "83"]);
+
+function deptFromAddress(addr: string): string {
+  const m = (addr || "").match(/\b(\d{5})\b/);
+  return m ? m[1].slice(0, 2) : "";
+}
+
+function climateZone(addr: string): "H1" | "H2" | "H3" | null {
+  const d = deptFromAddress(addr);
+  if (!d) return null;
+  if (ZONE_H3.has(d)) return "H3";
+  if (ZONE_H2.has(d)) return "H2";
+  if (/^(0[1-9]|[1-8]\d|9[0-5])$/.test(d)) return "H1";
+  return null;
+}
+
 const isReplaceable = (c?: string) => /gaz|fioul|électr|electr|vapeur/i.test(c || "");
 const gtbExisting = (t: DataMap): string => (t.gtb as string) || (t.gtc as string) || "Non";
 
@@ -641,6 +663,18 @@ function ficheRecupSource(o: {
 }
 
 /* Catalogue par type de site (seuils repris des maquettes). */
+const FICHE_CONFINEMENT: OpRule = {
+  code: "BAT-TH-153",
+  name: "Confinement des allées froides / chaudes (Data Center)",
+  description: "Système de confinement des allées froides et allées chaudes dans un data center",
+  documents: ["Plan de la salle informatique", "Descriptif du système de confinement"],
+  evaluate: (t) => {
+    if (!parseNum(t.surfaceIT))
+      return { status: "a_verifier", reason: "À confirmer : surface salle informatique à renseigner" };
+    return { status: "eligible" };
+  },
+};
+
 /* Un site relève d'UN seul secteur : tertiaire (BAT), industrie (IND) ou
    agricole (AGRI). On ne mélange jamais les préfixes de fiches dans un type. */
 const RULES: Record<string, OpRule[]> = {
@@ -669,6 +703,7 @@ const RULES: Record<string, OpRule[]> = {
   datacenter: [
     ficheHPF("BAT-TH-134", { numKey: "puissanceCompresseurs", missing: "À confirmer : puissance compresseurs à renseigner" }),
     ficheGTB("surfaceIT", 1000),
+    FICHE_CONFINEMENT,
   ],
   /* ---------- Industrie (IND) — uniquement le Site Industriel ---------- */
   industriel: [
@@ -843,6 +878,28 @@ function TimeField({
         />
       </div>
     </Field>
+  );
+}
+
+const ZONE_BADGE: Record<"H1" | "H2" | "H3", string> = {
+  H1: "bg-sky-50 text-sky-700 ring-sky-200",
+  H2: "bg-amber-50 text-amber-700 ring-amber-200",
+  H3: "bg-red-50 text-red-700 ring-red-200",
+};
+
+function ZoneClimatique({ adresse }: { adresse: string }) {
+  const z = climateZone(adresse);
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm md:col-span-2">
+      <span className="text-slate-500">Zone climatique (auto) :</span>
+      {z ? (
+        <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1", ZONE_BADGE[z])}>
+          {z}
+        </span>
+      ) : (
+        <span className="text-xs text-slate-400">à déterminer — ajoutez le code postal dans l'adresse</span>
+      )}
+    </div>
   );
 }
 
@@ -1453,6 +1510,7 @@ export default function RenomaQualificationProspect() {
                 onChange={(v) => setIdent({ ...ident, adresse: v })}
                 placeholder="Ex: 15 rue de la Paix, 75001 Paris"
               />
+              <ZoneClimatique adresse={ident.adresse} />
               <TextField
                 label="Téléphone"
                 icon={Phone}
@@ -1733,6 +1791,7 @@ function ReportView({
             </span>
           </div>
           <ReportLine label="Adresse" value={ident.adresse || "-"} />
+          <ReportLine label="Zone climatique" value={climateZone(ident.adresse) || "-"} />
           <ReportLine label="Téléphone" value={ident.telephone || "-"} />
           <ReportLine label="Contact" value={ident.contact || "-"} />
           <ReportLine label="Email" value={ident.email || "-"} />
