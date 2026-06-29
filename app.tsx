@@ -640,41 +640,38 @@ function ficheRecupSource(o: {
 }
 
 /* Catalogue par type de site (seuils repris des maquettes). */
+/* Un site relève d'UN seul secteur : tertiaire (BAT), industrie (IND) ou
+   agricole (AGRI). On ne mélange jamais les préfixes de fiches dans un type. */
 const RULES: Record<string, OpRule[]> = {
-  hospitalier: [
-    fichePAC(),
-    ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" }),
-    ficheRecupFatale({ presenceKey: "groupesFroids", powerKey: "puissanceCompresseurs" }),
-  ],
+  /* ---------- Tertiaire (BAT) ---------- */
   hotellerie: [fichePAC(), ficheGTBrooms(200), ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" })],
+  hospitalier: [fichePAC(), ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" })],
   distribution: [
     ficheGTB("surfaceVente", 1200),
     FICHE_MEUBLES,
     ficheHPF("BAT-TH-134", { boolKey: "centralesFroides" }),
-    ficheCondensationHE({ boolKey: "centralesFroides" }),
     fichePAC("surfaceVente"),
   ],
   entrepot_non_refrigere: [ficheGTB("surface", 2000), FICHE_DESTRAT, fichePAC()],
-  entrepot_frigorifique: [
-    FICHE_RECUP,
-    ficheHPF("BAT-TH-134", { numKey: "nbGroupesFroids", missing: "À confirmer : nombre de groupes froids à renseigner" }),
-    FICHE_VEV,
-    ficheGTB("surfaceZone", 800),
-    fichePAC("surfaceZone"),
-  ],
   centre_commercial: [
     ficheGTB("surfaceGalerie", 5000),
     ficheHPF("BAT-TH-134", { boolKey: "groupesFroids" }),
     fichePAC("surfaceGalerie"),
   ],
+  bureaux: [ficheGTB("surface", 2000), fichePAC("surface", 3000)],
+  scolaire: [fichePAC("surface", 3000)],
+  /* ---------- Industrie (IND) ---------- */
+  entrepot_frigorifique: [
+    FICHE_RECUP,
+    ficheCondensationHE({ numKey: "nbGroupesFroids", missing: "À confirmer : nombre de groupes froids à renseigner" }),
+    ficheHPF("IND-UT-116", { numKey: "nbGroupesFroids", missing: "À confirmer : nombre de groupes froids à renseigner" }),
+    FICHE_VEV,
+  ],
   datacenter: [
     FICHE_RECUP_DC,
+    ficheCondensationHE({ numKey: "puissanceCompresseurs", missing: "À confirmer : puissance compresseurs à renseigner" }),
     ficheHPF("IND-UT-116", { numKey: "puissanceCompresseurs", missing: "À confirmer : puissance compresseurs à renseigner" }),
-    FICHE_GTB_DC,
   ],
-  bureaux: [ficheGTB("surface", 2000), fichePAC("surface", 3000)],
-  agricole: [fichePAC(), FICHE_PREREFROID, ficheHPF("AGRI-UT-104", { boolKey: "tankLait" })],
-  scolaire: [fichePAC("surface", 3000)],
   industriel: [
     ficheRecupSource({
       code: "IND-UT-118",
@@ -706,6 +703,8 @@ const RULES: Record<string, OpRule[]> = {
       missing: "À confirmer : puissance groupes froid à renseigner",
     }),
   ],
+  /* ---------- Agricole (AGRI) ---------- */
+  agricole: [FICHE_PREREFROID, ficheHPF("AGRI-UT-104", { boolKey: "tankLait" })],
 };
 
 function qualify(siteType: string, t: DataMap): OpResult[] {
