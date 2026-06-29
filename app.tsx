@@ -1609,6 +1609,7 @@ export default function RenomaQualificationProspect() {
                   <ReportLine label="Nom" value={ident.raisonSociale || "—"} />
                   <ReportLine label="Site" value={site?.label ?? "—"} />
                   <ReportLine label="Adresse" value={ident.adresse || "—"} />
+                  <ReportLine label="Zone climatique" value={climateZone(ident.adresse) || "—"} />
                   <ReportLine label="Tel" value={ident.telephone || "Non renseigné"} />
                   <ReportLine label="Contact" value={ident.contact || "—"} />
                   <ReportLine label="Fonction" value={ident.fonctionContact || "—"} />
