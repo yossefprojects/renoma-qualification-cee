@@ -126,6 +126,15 @@ const EMETTEURS = [
 ];
 const ESPACE_TECHNIQUE = ["Local intérieur", "Cabane extérieure possible", "Non"];
 const TYPE_CONDENSEUR = ["À condensation", "Hydraulique"];
+const SECTEURS_INDUSTRIELS = [
+  "Laiterie / Industrie Laitière",
+  "Métallurgie / Traitement Thermique",
+  "Chimie / Pharmacie",
+  "Agroalimentaire (général)",
+  "Papeterie / Carton",
+  "Textile / Teinturerie",
+  "Autre",
+];
 
 /* Caractérisation détaillée des groupes froids — révélée quand la présence de
    froid est cochée. Réutilisée par tous les types de site concernés. */
@@ -323,20 +332,6 @@ const TECH_FIELDS: Record<string, Field[]> = {
     { kind: "bool", key: "gymnase", label: "Gymnase ou salle de sport présent(e) ?", span: "full" },
   ],
   industriel: [
-    {
-      kind: "select",
-      key: "secteurActivite",
-      label: "Secteur d'activité",
-      options: [
-        "Laiterie / Industrie Laitière",
-        "Métallurgie / Traitement Thermique",
-        "Chimie / Pharmacie",
-        "Agroalimentaire (général)",
-        "Papeterie / Carton",
-        "Textile / Teinturerie",
-        "Autre",
-      ],
-    },
     {
       kind: "group",
       key: "sources",
@@ -1367,6 +1362,7 @@ const EMPTY_IDENT = {
   raisonSociale: "",
   contact: "",
   fonctionContact: "",
+  secteurActivite: "",
   adresse: "",
   telephone: "",
   email: "",
@@ -1558,6 +1554,14 @@ export default function RenomaQualificationProspect() {
                 onChange={(v) => setIdent({ ...ident, fonctionContact: v })}
                 placeholder="Ex: Directeur technique"
               />
+              {siteType === "industriel" && (
+                <SelectField
+                  label="Secteur d'activité"
+                  options={SECTEURS_INDUSTRIELS}
+                  value={ident.secteurActivite}
+                  onChange={(v) => setIdent({ ...ident, secteurActivite: v })}
+                />
+              )}
               <TextField
                 span="full"
                 label="Adresse du site"
@@ -1657,6 +1661,9 @@ export default function RenomaQualificationProspect() {
                 <div className="grid grid-cols-1 gap-x-8 gap-y-2 sm:grid-cols-2">
                   <ReportLine label="Nom" value={ident.raisonSociale || "—"} />
                   <ReportLine label="Site" value={site?.label ?? "—"} />
+                  {siteType === "industriel" && (
+                    <ReportLine label="Secteur" value={ident.secteurActivite || "—"} />
+                  )}
                   <ReportLine label="Adresse" value={ident.adresse || "—"} />
                   <ReportLine label="Zone climatique" value={climateZone(ident.adresse) || "—"} />
                   <ReportLine label="Tel" value={ident.telephone || "Non renseigné"} />
@@ -1858,6 +1865,9 @@ function ReportView({
               {site ? `${site.emoji} ${site.label}` : "-"}
             </span>
           </div>
+          {site?.key === "industriel" && (
+            <ReportLine label="Secteur d'activité" value={ident.secteurActivite || "-"} />
+          )}
           <ReportLine label="Adresse" value={ident.adresse || "-"} />
           <ReportLine label="Zone climatique" value={climateZone(ident.adresse) || "-"} />
           <ReportLine label="Téléphone" value={ident.telephone || "-"} />
