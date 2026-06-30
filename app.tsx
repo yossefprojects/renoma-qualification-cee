@@ -324,6 +324,20 @@ const TECH_FIELDS: Record<string, Field[]> = {
   ],
   industriel: [
     {
+      kind: "select",
+      key: "secteurActivite",
+      label: "Secteur d'activité",
+      options: [
+        "Laiterie / Industrie Laitière",
+        "Métallurgie / Traitement Thermique",
+        "Chimie / Pharmacie",
+        "Agroalimentaire (général)",
+        "Papeterie / Carton",
+        "Textile / Teinturerie",
+        "Autre",
+      ],
+    },
+    {
       kind: "group",
       key: "sources",
       label: "Sources de chaleur fatale",
